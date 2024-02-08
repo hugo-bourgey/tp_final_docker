@@ -6,7 +6,7 @@ WORKDIR /app
 COPY . .
 
 RUN composer install --no-scripts --no-autoloader && \
-    composer dump-autoload --optimize
+    composer dump-autoload --optimize 
 
 # Stage 2: Production Stage
 FROM php:8.2-apache

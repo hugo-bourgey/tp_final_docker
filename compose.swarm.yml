@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    deploy:
+      replicas: 1  # Set the desired number of replicas
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tp_final
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    networks:
+      - my-network
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init-scripts:/docker-entrypoint-initdb.d
+
+  symfony-app:
+    image: tp_final-symfony-app
+    deploy:
+      replicas: 3  # Set the desired number of replicas based on your requirements
+      placement:
+        constraints:
+          - node.role == worker  # Deploy on worker nodes
+    ports:
+      - "8000:80"
+    depends_on:
+      - mysql
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: overlay  # Use overlay network for Docker Swarm deployments
+
+volumes:
+  mysql-data:
