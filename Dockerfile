@@ -6,10 +6,10 @@ WORKDIR /app
 COPY . .
 
 RUN composer install --no-scripts --no-autoloader && \
-    composer dump-autoload --optimize --no-dev
+    composer dump-autoload --optimize
 
 # Stage 2: Production Stage
-FROM php:7.4-apache
+FROM php:8.2-apache
 
 WORKDIR /var/www/html
 
@@ -26,8 +26,18 @@ RUN apt-get update && \
         zip \
     && a2enmod rewrite
 
+# Apache configuration
+COPY apache-config/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Enable Apache modules and configure the default virtual host
+RUN a2enmod rewrite && \
+    sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/sites-available/000-default.conf
+
 # Copy files from the build stage
 COPY --from=build /app .
+
+# Adjust file ownership to allow Symfony to write to the cache directory
+RUN chown -R www-data:www-data var
 
 # Expose port 80
 EXPOSE 80
